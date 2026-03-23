@@ -66,9 +66,11 @@ class TestUsersRouter:
         assert body["user"]["id"] == user_id
         assert body["posts"] == []
 
-    def test_with_posts_includes_created_post(self, client: TestClient) -> None:
+    def test_with_posts_includes_created_post(
+        self, client: TestClient, posts_client: TestClient
+    ) -> None:
         user_id = self._register(client, email="author@example.com")
-        post = client.post(
+        post = posts_client.post(
             "/posts",
             json={"user_id": user_id, "title": "Hello", "content": "World"},
         )

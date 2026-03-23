@@ -50,7 +50,24 @@ def db_session(session_factory) -> Generator[Session]:
 @pytest.fixture
 def app(monkeypatch, database_url: str):
     monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("POSTS_SERVICE_BASE_URL", "__embedded_posts__")
     return create_app()
+
+
+@pytest.fixture
+def posts_app(monkeypatch, database_url: str):
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("POSTS_SERVICE_BASE_URL", "http://127.0.0.1:8001")
+
+    from posts_main import create_posts_app
+
+    return create_posts_app()
+
+
+@pytest.fixture
+def posts_client(posts_app):
+    with TestClient(posts_app) as test_client:
+        yield test_client
 
 
 @pytest.fixture

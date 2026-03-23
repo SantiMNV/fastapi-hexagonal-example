@@ -1,8 +1,6 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from src.posts.application.ports.post_repository import PostRepository
-from src.posts.domain.post import Post
 from src.users.application.ports.user_repository import UserRepository
 from src.users.domain.user import User
 
@@ -33,23 +31,6 @@ class InMemoryUserRepository(UserRepository):
 
     def delete(self, user_id: str) -> None:
         self.users.pop(user_id, None)
-
-
-class InMemoryPostRepository(PostRepository):
-    def __init__(self) -> None:
-        self.posts: dict[str, Post] = {}
-
-    def add(self, post: Post) -> None:
-        self.posts[post.id] = post
-
-    def get_by_id(self, post_id: str) -> Post | None:
-        return self.posts.get(post_id)
-
-    def list_by_user_id(self, user_id: str) -> list[Post]:
-        return [p for p in self.posts.values() if p.user_id == user_id]
-
-    def delete(self, post_id: str) -> None:
-        self.posts.pop(post_id, None)
 
 
 def sample_user(*, user_id: str | None = None, email: str = "alice@example.com") -> User:

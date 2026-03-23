@@ -45,11 +45,19 @@ From the project root:
   ```
    Defaults use **SQLite** (`DATABASE_URL=sqlite:///./app.db` in `[.env.example](.env.example)`). Adjust `APP_NAME`, `DATABASE_URL`, or `DB_ECHO` if needed.
 3. **Run the app**
-  ```bash
-   uv run uvicorn main:app --reload
-  ```
-  - API: `http://127.0.0.1:8000`
-  - OpenAPI UI: `http://127.0.0.1:8000/docs`
+  - **Users API** (expects a separate posts process unless you use test mode `POSTS_SERVICE_BASE_URL=__embedded_posts__`):
+    ```bash
+    uv run uvicorn main:app --reload --port 8000
+    ```
+  - **Posts API** (same `DATABASE_URL` as users):
+    ```bash
+    uv run uvicorn posts_main:app --reload --port 8001
+    ```
+  - Set `POSTS_SERVICE_BASE_URL=http://127.0.0.1:8001` in `.env` for the users app.
+  - **Docker (both services, one SQLite file on a shared volume):** `docker compose up --build`
+   - Users API: `http://127.0.0.1:8000`
+   - Posts API: `http://127.0.0.1:8001`
+   - OpenAPI: `/docs` on each port
 
 ## Commands
 
@@ -78,6 +86,7 @@ Typical pre-commit: `uv run ruff check . --fix`, `uv run ruff format .`, `uv run
 | `DELETE` | `/users/{user_id}`            | Delete user            |
 | `GET`    | `/users/{user_id}/posts`      | List posts for a user  |
 | `GET`    | `/users/{user_id}/with-posts` | User with nested posts |
+| `GET`    | `/posts/by-user/{user_id}`    | List posts (posts service) |
 | `POST`   | `/posts`                      | Create a post          |
 | `GET`    | `/posts/{post_id}`            | Get post by id         |
 | `DELETE` | `/posts/{post_id}`            | Delete post            |
@@ -202,7 +211,7 @@ Routers are registered in `[main.py](main.py)`. `[get_request_context](src/share
 
 ### Composite read models
 
-Endpoints that return data spanning contexts (e.g. user with posts) may compose use cases that take multiple repositories in the same factory (`[UserFactory](src/users/infrastructure/http/factory.py)`) and reuse HTTP response types across routers where practical. Keep **domain exceptions** aligned with what each use case actually raises; avoid catching another bounded context’s exceptions in a handler unless that is part of the use case contract.
+Endpoints that return data spanning contexts (e.g. user with posts) load the user in-process and call the **posts service** over HTTP (`GET /posts/by-user/{user_id}`). Keep **domain exceptions** aligned with what each use case actually raises on the users side; posts errors map from `httpx` status codes where needed.
 
 ## Testing
 
@@ -236,7 +245,8 @@ Run everything with `uv run pytest`.
 ## Project layout
 
 - `[src/](src/)` — Bounded contexts (`users`, `posts`) and `shared` (settings, DB, HTTP context, shared ports)
-- `[main.py](main.py)` — `create_app()`, lifespan (engine, session factory), router includes
+- `[main.py](main.py)` — users app: `create_app()`, lifespan, HTTP client to posts service
+- `[posts_main.py](posts_main.py)` — posts-only app (`posts_main:app` for a second process or container)
 - `[tests/](tests/)` — Pytest layout mirroring `src/` (use cases, persistence, HTTP, doubles)
 - `[docs/](docs/)` — Design notes not shipped as package code (e.g. `[docs/design_notes_monolith_vs_microservices.py](docs/design_notes_monolith_vs_microservices.py)`)
 - `[scripts/lint_architecture.py](scripts/lint_architecture.py)` — Architecture lint script

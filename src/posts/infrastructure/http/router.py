@@ -11,6 +11,18 @@ from src.shared.infrastructure.http import RequestContext, get_request_context
 router = APIRouter(prefix="/posts", tags=["posts"])
 
 
+@router.get("/by-user/{user_id}", response_model=list[PostResponse])
+def list_posts_for_user(
+    user_id: str,
+    ctx: RequestContext = Depends(get_request_context),
+) -> list[PostResponse]:
+    try:
+        posts = ctx.factory.posts.create_list_user_posts_use_case().execute(user_id)
+        return [PostResponse.model_validate(post) for post in posts]
+    except PostAuthorNotFoundException as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
+
+
 @router.post("", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 def create_post(
     payload: CreatePostRequest,

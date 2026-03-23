@@ -1,0 +1,26 @@
+services:
+  posts:
+    build: .
+    command: ["uvicorn", "posts_main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      DATABASE_URL: sqlite:////data/app.db
+    volumes:
+      - appdata:/data
+    ports:
+      - "8001:8000"
+
+  users:
+    build: .
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      DATABASE_URL: sqlite:////data/app.db
+      POSTS_SERVICE_BASE_URL: http://posts:8000
+    volumes:
+      - appdata:/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      - posts
+
+volumes:
+  appdata: {}

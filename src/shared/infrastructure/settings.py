@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     app_name: str = "FastAPI Hexagonal Example"
     database_url: str = "sqlite:///./app.db"
     db_echo: bool = False
+    posts_service_base_url: str = "http://127.0.0.1:8001"
 
     model_config = SettingsConfigDict(
         env_file=".env",
