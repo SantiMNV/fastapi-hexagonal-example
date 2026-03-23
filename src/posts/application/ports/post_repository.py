@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from src.posts.domain.post import Post
+
+
+class PostRepository(Protocol):
+    def add(self, post: Post) -> None: ...
+
+    def get_by_id(self, post_id: str) -> Post | None: ...
+
+    def list_by_user_id(self, user_id: str) -> list[Post]: ...
+
+    def delete(self, post_id: str) -> None: ...

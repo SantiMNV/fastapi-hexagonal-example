@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from src.users.domain.user import User
+
+
+class UserRepository(Protocol):
+    def add(self, user: User) -> None: ...
+
+    def get_by_id(self, user_id: str) -> User | None: ...
+
+    def get_by_email(self, email: str) -> User | None: ...
+
+    def delete(self, user_id: str) -> None: ...

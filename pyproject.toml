@@ -1,0 +1,80 @@
+[project]
+name = "fastapi-hexagonal-example"
+version = "0.1.0"
+description = "Simple FastAPI project with hexagonal architecture"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.30.0",
+  "pydantic-settings>=2.4.0",
+  "sqlalchemy>=2.0.0",
+  "email-validator>=2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "import-linter>=2.0",
+  "ruff>=0.15.7",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0.0",
+  "import-linter>=2.0",
+  "ruff>=0.15.7",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+# Hexagonal / layered imports: infrastructure → application → domain (per bounded context).
+# Domain isolation across BCs is enforced by scripts/lint_architecture.py (no per-package rules).
+# See https://import-linter.readthedocs.io/
+[tool.importlinter]
+root_package = "src"
+
+[[tool.importlinter.contracts]]
+id = "hexagonal-layers"
+name = "Bounded contexts follow infrastructure / application / domain"
+type = "layers"
+containers = [
+  "src.posts",
+  "src.users",
+  "src.shared",
+]
+layers = [
+  "infrastructure",
+  "(application)",
+  "domain",
+]
+
+[[tool.importlinter.contracts]]
+id = "application-no-infrastructure"
+name = "Application never imports infrastructure (any package under src)"
+type = "forbidden"
+source_modules = ["src.*.application"]
+forbidden_modules = ["src.*.infrastructure"]
+allow_indirect_imports = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+# FastAPI injects dependencies via Depends(...) in parameter defaults (not a mutable default).
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
