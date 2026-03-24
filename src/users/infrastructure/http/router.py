@@ -13,12 +13,12 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register_user(
+async def register_user(
     payload: RegisterUserRequest,
     ctx: RequestContext = Depends(get_request_context),
 ) -> UserResponse:
     try:
-        user = ctx.factory.users.create_register_user_use_case().execute(
+        user = await ctx.factory.users.create_register_user_use_case().execute(
             name=payload.name,
             email=str(payload.email),
         )
@@ -28,48 +28,50 @@ def register_user(
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-def get_user(
+async def get_user(
     user_id: str,
     ctx: RequestContext = Depends(get_request_context),
 ) -> UserResponse:
     try:
-        user = ctx.factory.users.create_get_user_use_case().execute(user_id)
+        user = await ctx.factory.users.create_get_user_use_case().execute(user_id)
         return UserResponse.model_validate(user)
     except UserNotFoundException as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(
+async def delete_user(
     user_id: str,
     ctx: RequestContext = Depends(get_request_context),
 ) -> Response:
     try:
-        ctx.factory.users.create_delete_user_use_case().execute(user_id)
+        await ctx.factory.users.create_delete_user_use_case().execute(user_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except UserNotFoundException as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
 
 
 @router.get("/{user_id}/posts", response_model=list[PostResponse])
-def get_user_posts(
+async def get_user_posts(
     user_id: str,
     ctx: RequestContext = Depends(get_request_context),
 ) -> list[PostResponse]:
     try:
-        posts = ctx.factory.posts.create_list_user_posts_use_case().execute(user_id)
+        posts = await ctx.factory.posts.create_list_user_posts_use_case().execute(user_id)
         return [PostResponse.model_validate(post) for post in posts]
     except UserNotFoundException as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
 
 
 @router.get("/{user_id}/with-posts", response_model=UserWithPostsResponse)
-def get_user_with_posts(
+async def get_user_with_posts(
     user_id: str,
     ctx: RequestContext = Depends(get_request_context),
 ) -> UserWithPostsResponse:
     try:
-        user, posts = ctx.factory.users.create_get_user_with_posts_use_case().execute(user_id)
+        user, posts = await ctx.factory.users.create_get_user_with_posts_use_case().execute(
+            user_id
+        )
         return UserWithPostsResponse(
             user=UserResponse.model_validate(user),
             posts=[PostResponse.model_validate(p) for p in posts],

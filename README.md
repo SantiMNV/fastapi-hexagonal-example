@@ -64,6 +64,7 @@ From the project root:
 | `uv run ruff format .`                       | Format with Ruff’s formatter                                                                                              |
 | `uv run python scripts/lint_architecture.py` | import-linter **plus** domain isolation AST check (see [Tooling and architecture rules](#tooling-and-architecture-rules)) |
 | `uv run lint-imports`                        | import-linter only; skips the domain script                                                                               |
+| `uvx ty check`                               | Run type checking
 
 
 Typical pre-commit: `uv run ruff check . --fix`, `uv run ruff format .`, `uv run pytest`, and optionally `uv run python scripts/lint_architecture.py`.

@@ -1,16 +1,16 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.users.application.ports.user_repository import UserRepository
+from src.users.application.ports.user_repository import IUserRepository
 from src.users.domain.user import User
 from src.users.infrastructure.persistence.orm import UserORM
 
 
-class SQLAlchemyUserRepository(UserRepository):
+class SQLAlchemyUserRepository(IUserRepository):
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def add(self, user: User) -> None:
+    async def add(self, user: User) -> None:
         orm_user = UserORM(
             id=user.id,
             name=user.name,
@@ -19,20 +19,20 @@ class SQLAlchemyUserRepository(UserRepository):
         )
         self.db.add(orm_user)
 
-    def get_by_id(self, user_id: str) -> User | None:
+    async def get_by_id(self, user_id: str) -> User | None:
         orm_user = self.db.get(UserORM, user_id)
         if orm_user is None:
             return None
         return self._to_domain(orm_user)
 
-    def get_by_email(self, email: str) -> User | None:
+    async def get_by_email(self, email: str) -> User | None:
         stmt = select(UserORM).where(UserORM.email == email)
         orm_user = self.db.execute(stmt).scalar_one_or_none()
         if orm_user is None:
             return None
         return self._to_domain(orm_user)
 
-    def delete(self, user_id: str) -> None:
+    async def delete(self, user_id: str) -> None:
         orm_user = self.db.get(UserORM, user_id)
         if orm_user is None:
             return

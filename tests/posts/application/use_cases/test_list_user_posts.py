@@ -11,21 +11,21 @@ from tests.posts.doubles import (
 
 
 class TestListUserPostsUseCase:
-    def test_returns_posts_for_user(self) -> None:
+    async def test_returns_posts_for_user(self) -> None:
         users = InMemoryUserRepository()
         posts = InMemoryPostRepository()
         user = sample_user()
-        users.add(user)
+        await users.add(user)
         p1 = sample_post(user_id=user.id)
-        posts.add(p1)
+        await posts.add(p1)
         use_case = ListUserPostsUseCase(posts, users)
 
-        result = use_case.execute(user.id)
+        result = await use_case.execute(user.id)
 
         assert result == [p1]
 
-    def test_raises_when_author_missing(self) -> None:
+    async def test_raises_when_author_missing(self) -> None:
         use_case = ListUserPostsUseCase(InMemoryPostRepository(), InMemoryUserRepository())
 
         with pytest.raises(PostAuthorNotFoundException):
-            use_case.execute("missing-user")
+            await use_case.execute("missing-user")

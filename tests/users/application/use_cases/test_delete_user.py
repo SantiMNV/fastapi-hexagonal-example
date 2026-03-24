@@ -6,18 +6,18 @@ from tests.users.doubles import InMemoryUserRepository, NoOpUnitOfWork, sample_u
 
 
 class TestDeleteUserUseCase:
-    def test_removes_user(self) -> None:
+    async def test_removes_user(self) -> None:
         repository = InMemoryUserRepository()
         user = sample_user()
-        repository.add(user)
+        await repository.add(user)
         use_case = DeleteUserUseCase(repository, NoOpUnitOfWork())
 
-        use_case.execute(user.id)
+        await use_case.execute(user.id)
 
-        assert repository.get_by_id(user.id) is None
+        assert await repository.get_by_id(user.id) is None
 
-    def test_raises_when_missing(self) -> None:
+    async def test_raises_when_missing(self) -> None:
         use_case = DeleteUserUseCase(InMemoryUserRepository(), NoOpUnitOfWork())
 
         with pytest.raises(UserNotFoundException):
-            use_case.execute("missing-id")
+            await use_case.execute("missing-id")

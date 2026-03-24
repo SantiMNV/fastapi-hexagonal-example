@@ -1,16 +1,16 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.posts.application.ports.post_repository import PostRepository
+from src.posts.application.ports.post_repository import IPostRepository
 from src.posts.domain.post import Post
 from src.posts.infrastructure.persistence.orm import PostORM
 
 
-class SQLAlchemyPostRepository(PostRepository):
+class SQLAlchemyPostRepository(IPostRepository):
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def add(self, post: Post) -> None:
+    async def add(self, post: Post) -> None:
         orm_post = PostORM(
             id=post.id,
             user_id=post.user_id,
@@ -20,18 +20,18 @@ class SQLAlchemyPostRepository(PostRepository):
         )
         self.db.add(orm_post)
 
-    def get_by_id(self, post_id: str) -> Post | None:
+    async def get_by_id(self, post_id: str) -> Post | None:
         orm_post = self.db.get(PostORM, post_id)
         if orm_post is None:
             return None
         return self._to_domain(orm_post)
 
-    def list_by_user_id(self, user_id: str) -> list[Post]:
+    async def list_by_user_id(self, user_id: str) -> list[Post]:
         stmt = select(PostORM).where(PostORM.user_id == user_id)
         orm_posts = self.db.execute(stmt).scalars().all()
         return [self._to_domain(orm_post) for orm_post in orm_posts]
 
-    def delete(self, post_id: str) -> None:
+    async def delete(self, post_id: str) -> None:
         orm_post = self.db.get(PostORM, post_id)
         if orm_post is None:
             return
