@@ -12,12 +12,12 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 
 
 @router.post("", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
-def create_post(
+async def create_post(
     payload: CreatePostRequest,
     ctx: RequestContext = Depends(get_request_context),
 ) -> PostResponse:
     try:
-        post = ctx.factory.posts.create_create_post_use_case().execute(
+        post = await ctx.factory.posts.create_create_post_use_case().execute(
             user_id=payload.user_id,
             title=payload.title,
             content=payload.content,
@@ -28,24 +28,24 @@ def create_post(
 
 
 @router.get("/{post_id}", response_model=PostResponse)
-def get_post(
+async def get_post(
     post_id: str,
     ctx: RequestContext = Depends(get_request_context),
 ) -> PostResponse:
     try:
-        post = ctx.factory.posts.create_get_post_use_case().execute(post_id)
+        post = await ctx.factory.posts.create_get_post_use_case().execute(post_id)
         return PostResponse.model_validate(post)
     except PostNotFoundException as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(
+async def delete_post(
     post_id: str,
     ctx: RequestContext = Depends(get_request_context),
 ) -> Response:
     try:
-        ctx.factory.posts.create_delete_post_use_case().execute(post_id)
+        await ctx.factory.posts.create_delete_post_use_case().execute(post_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except PostNotFoundException as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc

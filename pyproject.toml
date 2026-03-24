@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115.0",
+  "httpx>=0.28.0",
   "uvicorn[standard]>=0.30.0",
   "pydantic-settings>=2.4.0",
   "sqlalchemy>=2.0.0",
@@ -15,6 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0.0",
+  "pytest-asyncio>=0.24.0",
   "import-linter>=2.0",
   "ruff>=0.15.7",
 ]
@@ -22,6 +24,7 @@ dev = [
 [dependency-groups]
 dev = [
   "pytest>=8.0.0",
+  "pytest-asyncio>=0.24.0",
   "import-linter>=2.0",
   "ruff>=0.15.7",
 ]
@@ -36,6 +39,7 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+asyncio_mode = "auto"
 
 # Hexagonal / layered imports: infrastructure → application → domain (per bounded context).
 # Domain isolation across BCs is enforced by scripts/lint_architecture.py (no per-package rules).

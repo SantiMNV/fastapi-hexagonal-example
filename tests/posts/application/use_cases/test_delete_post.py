@@ -6,19 +6,19 @@ from tests.posts.doubles import InMemoryPostRepository, NoOpUnitOfWork, sample_p
 
 
 class TestDeletePostUseCase:
-    def test_removes_post(self) -> None:
+    async def test_removes_post(self) -> None:
         posts = InMemoryPostRepository()
         user = sample_user()
         post = sample_post(user_id=user.id)
-        posts.add(post)
+        await posts.add(post)
         use_case = DeletePostUseCase(posts, NoOpUnitOfWork())
 
-        use_case.execute(post.id)
+        await use_case.execute(post.id)
 
-        assert posts.get_by_id(post.id) is None
+        assert await posts.get_by_id(post.id) is None
 
-    def test_raises_when_missing(self) -> None:
+    async def test_raises_when_missing(self) -> None:
         use_case = DeletePostUseCase(InMemoryPostRepository(), NoOpUnitOfWork())
 
         with pytest.raises(PostNotFoundException):
-            use_case.execute("missing-id")
+            await use_case.execute("missing-id")

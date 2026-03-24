@@ -14,11 +14,11 @@ from tests.users.doubles import (
 
 
 class TestGetUserWithPostsUseCase:
-    def test_returns_user_and_posts(self) -> None:
+    async def test_returns_user_and_posts(self) -> None:
         users = InMemoryUserRepository()
         posts = InMemoryPostRepository()
         user = sample_user()
-        users.add(user)
+        await users.add(user)
         post = Post(
             id=str(uuid4()),
             user_id=user.id,
@@ -26,17 +26,17 @@ class TestGetUserWithPostsUseCase:
             content="Body",
             created_at=datetime.now(UTC),
         )
-        posts.add(post)
+        await posts.add(post)
         use_case = GetUserWithPostsUseCase(users, posts)
 
-        u, user_posts = use_case.execute(user.id)
+        u, user_posts = await use_case.execute(user.id)
 
         assert u is user
         assert len(user_posts) == 1
         assert user_posts[0] is post
 
-    def test_raises_when_user_missing(self) -> None:
+    async def test_raises_when_user_missing(self) -> None:
         use_case = GetUserWithPostsUseCase(InMemoryUserRepository(), InMemoryPostRepository())
 
         with pytest.raises(UserNotFoundException):
-            use_case.execute("missing-id")
+            await use_case.execute("missing-id")
