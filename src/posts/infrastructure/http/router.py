@@ -27,6 +27,18 @@ async def create_post(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
 
 
+@router.get("/by-user/{user_id}", response_model=list[PostResponse])
+async def list_posts_by_user(
+    user_id: str,
+    ctx: RequestContext = Depends(get_request_context),
+) -> list[PostResponse]:
+    try:
+        posts = await ctx.factory.posts.create_list_user_posts_use_case().execute(user_id)
+        return [PostResponse.model_validate(p) for p in posts]
+    except PostAuthorNotFoundException as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
+
+
 @router.get("/{post_id}", response_model=PostResponse)
 async def get_post(
     post_id: str,

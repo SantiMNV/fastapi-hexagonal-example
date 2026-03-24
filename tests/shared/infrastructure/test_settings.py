@@ -12,6 +12,8 @@ class TestSettings:
         assert settings.app_name == "Test App"
         assert settings.database_url == "sqlite:///:memory:"
         assert settings.db_echo is True
+        assert settings.post_service_external is False
+        assert settings.posts_service_base_url == "http://localhost:8001"
 
     def test_get_settings_is_cached(self) -> None:
         first = get_settings()

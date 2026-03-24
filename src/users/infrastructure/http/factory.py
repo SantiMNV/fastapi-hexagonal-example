@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from src.posts.infrastructure.persistence.repository import SQLAlchemyPostRepository
+from src.posts.application.ports.post_repository import IPostRepository
 from src.shared.infrastructure.persistence.unit_of_work import SQLAlchemyUnitOfWork
 from src.users.application.use_cases import (
     DeleteUserUseCase,
@@ -14,15 +14,16 @@ from src.users.infrastructure.persistence.repository import SQLAlchemyUserReposi
 class UserFactory:
     """User bounded context: use cases wired for one request session."""
 
-    def __init__(self, *, session: Session) -> None:
+    def __init__(self, *, session: Session, post_repository: IPostRepository) -> None:
         self._session = session
         self._uow = SQLAlchemyUnitOfWork(session)
+        self._post_repository = post_repository
 
     def _users(self) -> SQLAlchemyUserRepository:
         return SQLAlchemyUserRepository(self._session)
 
-    def _posts(self) -> SQLAlchemyPostRepository:
-        return SQLAlchemyPostRepository(self._session)
+    def _posts(self) -> IPostRepository:
+        return self._post_repository
 
     def create_register_user_use_case(self) -> RegisterUserUseCase:
         return RegisterUserUseCase(self._users(), self._uow)

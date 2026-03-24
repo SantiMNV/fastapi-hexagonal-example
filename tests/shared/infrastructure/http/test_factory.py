@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, sessionmaker
 
+from src.posts.infrastructure.persistence.repository import SQLAlchemyPostRepository
 from src.shared.infrastructure.http.context import RequestContext
 from src.shared.infrastructure.http.dependencies import get_request_context
 from src.shared.infrastructure.http.factory import AppFactory
@@ -9,7 +10,10 @@ from src.shared.infrastructure.http.factory import AppFactory
 
 class TestAppFactory:
     def test_exposes_user_and_post_factories(self, db_session: Session) -> None:
-        factory = AppFactory(session=db_session)
+        factory = AppFactory(
+            session=db_session,
+            post_repository=SQLAlchemyPostRepository(db_session),
+        )
 
         assert factory.users is not None
         assert factory.posts is not None

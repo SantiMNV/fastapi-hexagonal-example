@@ -1,0 +1,29 @@
+services:
+  monolith:
+    build:
+      context: .
+      dockerfile: Dockerfile.monolith
+    ports:
+      - "8000:8000"
+    environment:
+      # Misma SQLite compartida: FK posts.user_id → users.id sigue siendo válida.
+      DATABASE_URL: sqlite:////data/shared.db
+      POST_SERVICE_EXTERNAL: "true"
+      POSTS_SERVICE_BASE_URL: http://posts:8001
+    volumes:
+      - app_data:/data
+
+  posts:
+    build:
+      context: .
+      dockerfile: Dockerfile.posts
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: sqlite:////data/shared.db
+      POST_SERVICE_EXTERNAL: "false"
+    volumes:
+      - app_data:/data
+
+volumes:
+  app_data:

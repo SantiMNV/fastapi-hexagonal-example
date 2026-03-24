@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./app.db"
     db_echo: bool = False
 
+    post_service_external: bool = False
+    posts_service_base_url: str = "http://localhost:8001"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
