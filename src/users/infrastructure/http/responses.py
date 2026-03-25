@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-from src.posts.infrastructure.http.responses import PostResponse
+from src.shared.infrastructure.http.responses import PostResponse
 
 
 class UserResponse(BaseModel):

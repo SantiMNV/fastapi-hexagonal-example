@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from src.posts.infrastructure.http.responses import PostResponse
 from src.shared.infrastructure.http import RequestContext, get_request_context
+from src.shared.infrastructure.http.responses import PostResponse
 from src.users.domain.exceptions import (
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -57,7 +57,7 @@ async def get_user_posts(
     ctx: RequestContext = Depends(get_request_context),
 ) -> list[PostResponse]:
     try:
-        posts = await ctx.factory.posts.create_list_user_posts_use_case().execute(user_id)
+        posts = await ctx.factory.users.create_list_user_posts_use_case().execute(user_id)
         return [PostResponse.model_validate(post) for post in posts]
     except UserNotFoundException as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc

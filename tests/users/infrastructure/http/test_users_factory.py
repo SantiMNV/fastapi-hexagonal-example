@@ -7,11 +7,12 @@ from src.users.application.use_cases import (
     RegisterUserUseCase,
 )
 from src.users.infrastructure.http.factory import UserFactory
+from tests.users.doubles import InMemoryPostGateway
 
 
 class TestUserFactory:
     def test_create_use_cases(self, db_session: Session) -> None:
-        factory = UserFactory(session=db_session)
+        factory = UserFactory(session=db_session, post_gateway=InMemoryPostGateway())
 
         assert isinstance(factory.create_register_user_use_case(), RegisterUserUseCase)
         assert isinstance(factory.create_get_user_use_case(), GetUserUseCase)

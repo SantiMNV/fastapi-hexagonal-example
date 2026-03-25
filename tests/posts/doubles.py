@@ -1,16 +1,30 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from src.posts.application.ports.user_gateway import IUserGateway
 from src.posts.domain.post import Post
+from src.posts.domain.user_snapshot import UserSnapshot
 from tests.users.doubles import (
+    InMemoryPostGateway,
     InMemoryPostRepository,
     InMemoryUserRepository,
     NoOpUnitOfWork,
     sample_user,
 )
 
+
+class InMemoryUserGateway(IUserGateway):
+    def __init__(self) -> None:
+        self.snapshots: dict[str, UserSnapshot] = {}
+
+    async def get_by_id(self, user_id: str) -> UserSnapshot | None:
+        return self.snapshots.get(user_id)
+
+
 __all__ = [
+    "InMemoryPostGateway",
     "InMemoryPostRepository",
+    "InMemoryUserGateway",
     "InMemoryUserRepository",
     "NoOpUnitOfWork",
     "sample_post",

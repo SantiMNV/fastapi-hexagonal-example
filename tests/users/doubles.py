@@ -3,11 +3,14 @@ from uuid import uuid4
 
 from src.posts.application.ports.post_repository import IPostRepository
 from src.posts.domain.post import Post
+from src.shared.application.ports.unit_of_work import UnitOfWork
+from src.users.application.ports.post_gateway import IPostGateway
 from src.users.application.ports.user_repository import IUserRepository
+from src.users.domain.post_snapshot import PostSnapshot
 from src.users.domain.user import User
 
 
-class NoOpUnitOfWork:
+class NoOpUnitOfWork(UnitOfWork):
     def commit(self) -> None:
         pass
 
@@ -51,10 +54,36 @@ class InMemoryPostRepository(IPostRepository):
     async def delete(self, post_id: str) -> None:
         self.posts.pop(post_id, None)
 
+    async def delete_by_user_id(self, user_id: str) -> None:
+        for post_id, post in list(self.posts.items()):
+            if post.user_id == user_id:
+                del self.posts[post_id]
 
-def sample_user(
-    *, user_id: str | None = None, email: str = "alice@example.com"
-) -> User:
+
+class InMemoryPostGateway(IPostGateway):
+    """Test double for IPostGateway backed by InMemoryPostRepository."""
+
+    def __init__(self, repository: InMemoryPostRepository | None = None) -> None:
+        self._repo = repository or InMemoryPostRepository()
+
+    async def list_by_user_id(self, user_id: str) -> list[PostSnapshot]:
+        posts = await self._repo.list_by_user_id(user_id)
+        return [
+            PostSnapshot(
+                id=p.id,
+                user_id=p.user_id,
+                title=p.title,
+                content=p.content,
+                created_at=p.created_at,
+            )
+            for p in posts
+        ]
+
+    async def delete_by_user_id(self, user_id: str) -> None:
+        await self._repo.delete_by_user_id(user_id)
+
+
+def sample_user(*, user_id: str | None = None, email: str = "alice@example.com") -> User:
     return User(
         id=user_id or str(uuid4()),
         name="Alice",

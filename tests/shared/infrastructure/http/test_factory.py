@@ -2,9 +2,7 @@ from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.shared.infrastructure.http.context import RequestContext
-from src.shared.infrastructure.http.dependencies import get_request_context
-from src.shared.infrastructure.http.factory import AppFactory
+from src.shared.infrastructure.http import AppFactory, get_app_factory
 
 
 class TestAppFactory:
@@ -14,7 +12,7 @@ class TestAppFactory:
         assert factory.users is not None
         assert factory.posts is not None
 
-    def test_request_context_uses_domain_factories(
+    def test_dependency_provides_domain_factories(
         self, session_factory: sessionmaker[Session]
     ) -> None:
         app = FastAPI()
@@ -22,11 +20,11 @@ class TestAppFactory:
 
         @app.get("/inspect")
         def inspect(
-            ctx: RequestContext = Depends(get_request_context),
+            factory: AppFactory = Depends(get_app_factory),
         ) -> dict[str, str]:
             return {
-                "factory_users": type(ctx.factory.users).__name__,
-                "factory_posts": type(ctx.factory.posts).__name__,
+                "factory_users": type(factory.users).__name__,
+                "factory_posts": type(factory.posts).__name__,
             }
 
         with TestClient(app) as test_client:

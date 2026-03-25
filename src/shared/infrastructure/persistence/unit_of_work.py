@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 
+from src.shared.application.ports.unit_of_work import UnitOfWork
 
-class SQLAlchemyUnitOfWork:
+
+class SQLAlchemyUnitOfWork(UnitOfWork):
     __slots__ = ("_session",)
 
     def __init__(self, session: Session) -> None:

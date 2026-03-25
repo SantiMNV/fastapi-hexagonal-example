@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: src/shared/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:///./app.db
+    volumes:
+      - app_data:/app
+    restart: unless-stopped
+
+volumes:
+  app_data:

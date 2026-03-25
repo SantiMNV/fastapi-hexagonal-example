@@ -21,13 +21,13 @@ class TestPostsRouter:
         assert body["title"] == "Hello"
         assert body["id"]
 
-    def test_create_post_404_when_user_missing(self, client: TestClient) -> None:
+    def test_create_post_404_when_user_unknown(self, client: TestClient) -> None:
         response = client.post(
             "/posts",
             json={
-                "user_id": "00000000-0000-0000-0000-000000000001",
-                "title": "x",
-                "content": "y",
+                "user_id": "00000000-0000-0000-0000-000000000099",
+                "title": "Hi",
+                "content": "Body",
             },
         )
 

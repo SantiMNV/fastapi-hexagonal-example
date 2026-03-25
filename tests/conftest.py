@@ -5,9 +5,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from main import create_app
 from src.shared.infrastructure.persistence.orm import create_tables
 from src.shared.infrastructure.settings import get_settings
+from src.shared.main import create_app
 
 
 @pytest.fixture(autouse=True)
@@ -50,6 +50,8 @@ def db_session(session_factory) -> Generator[Session]:
 @pytest.fixture
 def app(monkeypatch, database_url: str):
     monkeypatch.setenv("DATABASE_URL", database_url)
+    # Register /internal/* routes and match outbound S2S client expectations in tests.
+    monkeypatch.setenv("INTERNAL_API_KEY", "test-internal-api-key")
     return create_app()
 
 

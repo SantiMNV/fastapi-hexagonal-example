@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from src.posts.application.ports.post_repository import IPostRepository
@@ -36,6 +36,10 @@ class SQLAlchemyPostRepository(IPostRepository):
         if orm_post is None:
             return
         self.db.delete(orm_post)
+
+    async def delete_by_user_id(self, user_id: str) -> None:
+        stmt = delete(PostORM).where(PostORM.user_id == user_id)
+        self.db.execute(stmt)
 
     @staticmethod
     def _to_domain(orm_post: PostORM) -> Post:

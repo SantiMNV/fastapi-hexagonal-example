@@ -35,42 +35,43 @@ brew install uv
 From the project root:
 
 1. **Install dependencies**
-  ```bash
-   uv sync
-  ```
-   This creates a `.venv`, resolves dependencies into `uv.lock`, and installs the project in editable mode (including dev dependencies: pytest, [Ruff](https://docs.astral.sh/ruff/), import-linter).
-2. **Environment**
-  ```bash
-   cp .env.example .env
-  ```
-   Defaults use **SQLite** (`DATABASE_URL=sqlite:///./app.db` in `[.env.example](.env.example)`). Adjust `APP_NAME`, `DATABASE_URL`, or `DB_ECHO` if needed.
-3. **Run the app**
-  ```bash
-   uv run uvicorn main:app --reload
-  ```
-  - API: `http://127.0.0.1:8000`
-  - OpenAPI UI: `http://127.0.0.1:8000/docs`
+
+```bash
+ uv sync
+```
+
+This creates a `.venv`, resolves dependencies into `uv.lock`, and installs the project in editable mode (including dev dependencies: pytest, [Ruff](https://docs.astral.sh/ruff/), import-linter). 2. **Environment**
+
+```bash
+ cp .env.example .env
+```
+
+Defaults use **SQLite** (`DATABASE_URL=sqlite:///./app.db` in `[.env.example](.env.example)`). Adjust `APP_NAME`, `DATABASE_URL`, or `DB_ECHO` if needed. 3. **Run the app**
+
+```bash
+ uv run uvicorn src.shared.main:app --reload
+```
+
+- API: `http://127.0.0.1:8000`
+- OpenAPI UI: `http://127.0.0.1:8000/docs`
 
 ## Commands
 
-
-| Command                                      | Description                                                                                                               |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `uv sync`                                    | Install or update dependencies from `pyproject.toml` / `uv.lock`                                                          |
-| `uv run uvicorn main:app --reload`           | Dev server with auto-reload                                                                                               |
-| `uv run pytest`                              | Run the test suite                                                                                                        |
-| `uv run ruff check .`                        | Lint (rules in `[pyproject.toml](pyproject.toml)` → `[tool.ruff]`)                                                        |
-| `uv run ruff check . --fix`                  | Lint with safe auto-fixes                                                                                                 |
-| `uv run ruff format .`                       | Format with Ruff’s formatter                                                                                              |
-| `uv run python scripts/lint_architecture.py` | import-linter **plus** domain isolation AST check (see [Tooling and architecture rules](#tooling-and-architecture-rules)) |
-| `uv run lint-imports`                        | import-linter only; skips the domain script                                                                               |
-| `uvx ty check`                               | Run type checking
-
+| Command                                       | Description                                                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `uv sync`                                     | Install or update dependencies from `pyproject.toml` / `uv.lock`                                                          |
+| `uv run uvicorn src.shared.main:app --reload` | Dev server with auto-reload                                                                                               |
+| `uv run pytest`                               | Run the test suite                                                                                                        |
+| `uv run ruff check .`                         | Lint (rules in `[pyproject.toml](pyproject.toml)` → `[tool.ruff]`)                                                        |
+| `uv run ruff check . --fix`                   | Lint with safe auto-fixes                                                                                                 |
+| `uv run ruff format .`                        | Format with Ruff’s formatter                                                                                              |
+| `uv run python scripts/lint_architecture.py`  | import-linter **plus** domain isolation AST check (see [Tooling and architecture rules](#tooling-and-architecture-rules)) |
+| `uv run lint-imports`                         | import-linter only; skips the domain script                                                                               |
+| `uvx ty check`                                | Run type checking                                                                                                         |
 
 Typical pre-commit: `uv run ruff check . --fix`, `uv run ruff format .`, `uv run pytest`, and optionally `uv run python scripts/lint_architecture.py`.
 
 ## API overview
-
 
 | Method   | Path                          | Description            |
 | -------- | ----------------------------- | ---------------------- |
@@ -83,7 +84,6 @@ Typical pre-commit: `uv run ruff check . --fix`, `uv run ruff format .`, `uv run
 | `GET`    | `/posts/{post_id}`            | Get post by id         |
 | `DELETE` | `/posts/{post_id}`            | Delete post            |
 
-
 ## Concepts
 
 ### Hexagonal architecture (ports and adapters)
@@ -91,7 +91,7 @@ Typical pre-commit: `uv run ruff check . --fix`, `uv run ruff format .`, `uv run
 Hexagonal architecture (also called **ports and adapters**) keeps **business logic** in the center and treats everything outside—HTTP, SQL, message queues, third-party APIs—as **replaceable plumbing**.
 
 **The core**  
-Here, the **domain** (entities, invariants, domain errors) and **application** (use cases orchestrating those rules) form the center. They encode *what the product does* and *what must stay true*, independent of FastAPI or SQLAlchemy.
+Here, the **domain** (entities, invariants, domain errors) and **application** (use cases orchestrating those rules) form the center. They encode _what the product does_ and _what must stay true_, independent of FastAPI or SQLAlchemy.
 
 **Ports**  
 A **port** is an interface the core needs in order to talk to the outside world **without** knowing the implementation. In this repo, outbound ports are mostly [`typing.Protocol`](https://docs.python.org/3/library/typing.html#typing.Protocol) definitions—for example [`UserRepository`](src/users/application/ports/user_repository.py) (persistence) and [`UnitOfWork`](src/shared/application/ports/unit_of_work.py) (transaction boundary). Use cases depend on these types only.
@@ -99,8 +99,9 @@ A **port** is an interface the core needs in order to talk to the outside world 
 **Adapters**  
 An **adapter** is the real implementation of a port, living in **infrastructure**. It translates between **domain objects** and **framework types**: e.g. [`SQLAlchemyUserRepository`](src/users/infrastructure/persistence/repository.py) maps `User` ↔ `UserORM`, and [`SQLAlchemyUnitOfWork`](src/shared/infrastructure/persistence/unit_of_work.py) maps `commit`/`rollback` ↔ SQLAlchemy [`Session`](https://docs.sqlalchemy.org/en/20/orm/session_api.html). The HTTP layer is another set of adapters: routers and Pydantic models adapt **HTTP** to **use case** inputs and outputs.
 
-**Inbound vs outbound**  
-- **Inbound (driving) adapters** trigger behavior: e.g. a FastAPI route calls `RegisterUserUseCase.execute(...)`. The “port” on this side is effectively the **use case API** your delivery mechanism invokes.  
+**Inbound vs outbound**
+
+- **Inbound (driving) adapters** trigger behavior: e.g. a FastAPI route calls `RegisterUserUseCase.execute(...)`. The “port” on this side is effectively the **use case API** your delivery mechanism invokes.
 - **Outbound (driven) adapters** are called **by** the core: repositories, unit of work, future integrations. They **implement** ports declared in `application/ports/`.
 
 **Dependency direction**  
@@ -162,7 +163,6 @@ The `[UnitOfWork](src/shared/application/ports/unit_of_work.py)` port exposes `c
 
 Typical layout (repeat per context under `src/`):
 
-
 | Location                                           | Role                                                |
 | -------------------------------------------------- | --------------------------------------------------- |
 | `domain/`                                          | Entities and domain exceptions                      |
@@ -173,7 +173,6 @@ Typical layout (repeat per context under `src/`):
 | `infrastructure/http/requests.py` / `responses.py` | API DTOs                                            |
 | `infrastructure/http/router.py`                    | Thin handlers; map domain exceptions to HTTP status |
 | `infrastructure/http/factory.py`                   | Wire use cases for this context for one `Session`   |
-
 
 **Adding a new top-level package** under `src/`: register it in the `containers` list in `[pyproject.toml](pyproject.toml)` (`[tool.importlinter]`) so layer contracts apply.
 
@@ -197,9 +196,7 @@ sequenceDiagram
     UC->>UoW: commit or rollback
 ```
 
-
-
-Routers are registered in `[main.py](main.py)`. `[get_request_context](src/shared/infrastructure/http/dependencies.py)` builds `[RequestContext](src/shared/infrastructure/http/context.py)` with the FastAPI `Request`, a DB `Session`, and `[AppFactory](src/shared/infrastructure/http/factory.py)`.
+Routers are registered in `[src/shared/main.py](src/shared/main.py)`. `[get_request_context](src/shared/infrastructure/http/dependencies.py)` builds `[RequestContext](src/shared/infrastructure/http/context.py)` with the FastAPI `Request`, a DB `Session`, and `[AppFactory](src/shared/infrastructure/http/factory.py)`.
 
 ### Composite read models
 
@@ -209,7 +206,6 @@ Endpoints that return data spanning contexts (e.g. user with posts) may compose 
 
 Tests mirror the architecture:
 
-
 | Style                      | What                                                                                                                                    | Example                                                                                                                    |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | **Use case (fast, no DB)** | Instantiate the use case with **fakes**: in-memory repositories and a no-op UoW from `[tests/users/doubles.py](tests/users/doubles.py)` | `[test_register_user.py](tests/users/application/use_cases/test_register_user.py)`                                         |
@@ -217,7 +213,6 @@ Tests mirror the architecture:
 | **Persistence**            | ORM and repository adapters against SQLite                                                                                              | `[tests/users/infrastructure/persistence/](tests/users/infrastructure/persistence/)`                                       |
 | **HTTP**                   | `TestClient` with `app` / `client` fixtures from `[tests/conftest.py](tests/conftest.py)`                                               | `[test_users_router.py](tests/users/infrastructure/http/test_users_router.py)`, `[test_main.py](tests/test_main.py)`       |
 | **Ports**                  | Lightweight structural checks                                                                                                           | `[tests/users/application/ports/test_user_repository_port.py](tests/users/application/ports/test_user_repository_port.py)` |
-
 
 `[tests/conftest.py](tests/conftest.py)` uses a **file-based SQLite** URL per test run so engines and sessions behave consistently; `reset_get_settings_cache` clears `[get_settings](src/shared/infrastructure/settings.py)` around tests that patch `DATABASE_URL`.
 
@@ -237,7 +232,7 @@ Run everything with `uv run pytest`.
 ## Project layout
 
 - `[src/](src/)` — Bounded contexts (`users`, `posts`) and `shared` (settings, DB, HTTP context, shared ports)
-- `[main.py](main.py)` — `create_app()`, lifespan (engine, session factory), router includes
+- `[src/shared/main.py](src/shared/main.py)` — monolith `create_app()`, lifespan (engine, session factory), router includes; split deploys use `[src/users/main.py](src/users/main.py)` and `[src/posts/main.py](src/posts/main.py)`
 - `[tests/](tests/)` — Pytest layout mirroring `src/` (use cases, persistence, HTTP, doubles)
 - `[docs/](docs/)` — Design notes not shipped as package code (e.g. `[docs/design_notes_monolith_vs_microservices.py](docs/design_notes_monolith_vs_microservices.py)`)
 - `[scripts/lint_architecture.py](scripts/lint_architecture.py)` — Architecture lint script

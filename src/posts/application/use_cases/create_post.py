@@ -4,25 +4,25 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from src.posts.application.ports.post_repository import IPostRepository
+from src.posts.application.ports.user_gateway import IUserGateway
 from src.posts.domain.exceptions import PostAuthorNotFoundException
 from src.posts.domain.post import Post
 from src.shared.application.ports.unit_of_work import UnitOfWork
-from src.users.application.ports.user_repository import IUserRepository
 
 
 class CreatePostUseCase:
     def __init__(
         self,
         post_repository: IPostRepository,
-        user_repository: IUserRepository,
+        user_gateway: IUserGateway,
         uow: UnitOfWork,
     ) -> None:
         self._post_repository = post_repository
-        self._user_repository = user_repository
+        self._user_gateway = user_gateway
         self._uow = uow
 
     async def execute(self, user_id: str, title: str, content: str) -> Post:
-        if await self._user_repository.get_by_id(user_id) is None:
+        if await self._user_gateway.get_by_id(user_id) is None:
             raise PostAuthorNotFoundException(user_id)
 
         post = Post(

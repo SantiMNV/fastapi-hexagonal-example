@@ -1,0 +1,33 @@
+# S2S calls use /internal/*; in production keep that traffic on a private network or mesh.
+services:
+  users:
+    build:
+      context: .
+      dockerfile: src/users/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:///./users.db
+      POSTS_SERVICE_URL: http://posts:8001
+      INTERNAL_API_KEY: "${INTERNAL_API_KEY:-dev-shared-internal-key}"
+    volumes:
+      - users_data:/app
+    restart: unless-stopped
+
+  posts:
+    build:
+      context: .
+      dockerfile: src/posts/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: sqlite:///./posts.db
+      USERS_SERVICE_URL: http://users:8000
+      INTERNAL_API_KEY: "${INTERNAL_API_KEY:-dev-shared-internal-key}"
+    volumes:
+      - posts_data:/app
+    restart: unless-stopped
+
+volumes:
+  users_data:
+  posts_data:
