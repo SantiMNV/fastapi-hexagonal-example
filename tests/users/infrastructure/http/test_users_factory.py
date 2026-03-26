@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from sqlalchemy.orm import Session
 
 from src.users.application.use_cases import (
@@ -6,13 +8,17 @@ from src.users.application.use_cases import (
     GetUserWithPostsUseCase,
     RegisterUserUseCase,
 )
-from src.users.infrastructure.http.factory import UserFactory
+from src.users.infrastructure.factory import UserFactory
 from tests.users.doubles import InMemoryPostGateway
 
 
 class TestUserFactory:
     def test_create_use_cases(self, db_session: Session) -> None:
-        factory = UserFactory(session=db_session, post_gateway=InMemoryPostGateway())
+        factory = UserFactory(
+            session=db_session,
+            post_gateway=InMemoryPostGateway(),
+            min_account_age=timedelta(hours=0),
+        )
 
         assert isinstance(factory.create_register_user_use_case(), RegisterUserUseCase)
         assert isinstance(factory.create_get_user_use_case(), GetUserUseCase)

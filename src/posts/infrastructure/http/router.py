@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
+from src.posts.domain.eligibility import PostAuthorEligibilityReason
 from src.posts.domain.exceptions import (
-    PostAuthorNotFoundException,
+    PostAuthorNotEligibleException,
     PostNotFoundException,
 )
 from src.posts.infrastructure.http.requests import CreatePostRequest
@@ -23,8 +24,10 @@ async def create_post(
             content=payload.content,
         )
         return PostResponse.model_validate(post)
-    except PostAuthorNotFoundException as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
+    except PostAuthorNotEligibleException as exc:
+        if exc.eligibility_reason == PostAuthorEligibilityReason.NOT_FOUND:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc.message) from exc
 
 
 @router.get("/{post_id}", response_model=PostResponse)

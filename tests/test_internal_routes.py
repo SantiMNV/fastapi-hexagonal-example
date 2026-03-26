@@ -74,6 +74,38 @@ class TestInternalRoutes:
         assert response.status_code == 200
         assert response.json()["id"] == user_id
 
+    def test_internal_users_posting_eligibility_ok(self, client: TestClient) -> None:
+        user_id = self._register(client)
+        response = client.get(
+            f"/internal/users/{user_id}/posting-eligibility",
+            headers=self._headers(),
+        )
+
+        assert response.status_code == 204
+
+    def test_internal_users_posting_eligibility_forbidden_when_too_new(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        from fastapi.testclient import TestClient
+
+        from src.shared.main import create_app
+
+        db_url = f"sqlite:///{(tmp_path / 'policy.db').resolve().as_posix()}"
+        monkeypatch.setenv("DATABASE_URL", db_url)
+        monkeypatch.setenv("INTERNAL_API_KEY", self._KEY)
+        monkeypatch.setenv("MIN_ACCOUNT_AGE_BEFORE_POSTING_HOURS", "24")
+        get_settings.cache_clear()
+        try:
+            with TestClient(create_app()) as client:
+                user_id = self._register(client)
+                response = client.get(
+                    f"/internal/users/{user_id}/posting-eligibility",
+                    headers=self._headers(),
+                )
+                assert response.status_code == 403
+        finally:
+            get_settings.cache_clear()
+
 
 class TestHttpGatewaysRequireInternalKey:
     def test_app_factory_raises_without_internal_key_when_remote_posts(

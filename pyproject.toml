@@ -63,6 +63,17 @@ layers = [
 ]
 
 [[tool.importlinter.contracts]]
+id = "app-composition-layer"
+name = "App composition wiring lives under composition"
+type = "layers"
+containers = [
+  "src.app",
+]
+layers = [
+  "composition",
+]
+
+[[tool.importlinter.contracts]]
 id = "application-no-infrastructure"
 name = "Application never imports infrastructure (any package under src)"
 type = "forbidden"

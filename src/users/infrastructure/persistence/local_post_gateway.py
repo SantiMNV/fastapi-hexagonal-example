@@ -1,5 +1,4 @@
-from src.posts.application.use_cases.delete_user_posts import DeleteUserPostsUseCase
-from src.posts.application.use_cases.get_posts_by_user import GetPostsByUserUseCase
+from src.posts.application.use_cases import DeleteUserPostsUseCase, GetPostsByUserUseCase
 from src.users.application.ports.post_gateway import IPostGateway
 from src.users.domain.post_snapshot import PostSnapshot
 

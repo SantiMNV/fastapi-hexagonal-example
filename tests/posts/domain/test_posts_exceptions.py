@@ -1,4 +1,4 @@
-from src.posts.domain.exceptions import PostNotFoundException
+from src.posts.domain.exceptions import PostAuthorNotEligibleException, PostNotFoundException
 
 
 class TestPostExceptions:
@@ -7,3 +7,8 @@ class TestPostExceptions:
 
         assert "p-1" in exc.message
         assert exc.code == "post_not_found"
+
+    def test_post_author_not_eligible_code(self) -> None:
+        exc = PostAuthorNotEligibleException("u-1")
+
+        assert exc.code == "post_author_not_eligible"

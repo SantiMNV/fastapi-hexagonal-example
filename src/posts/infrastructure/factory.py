@@ -17,21 +17,19 @@ class PostFactory:
         self._session = session
         self._uow = SQLAlchemyUnitOfWork(session)
         self._user_gateway = user_gateway
-
-    def _posts(self) -> SQLAlchemyPostRepository:
-        return SQLAlchemyPostRepository(self._session)
+        self._post_repository = SQLAlchemyPostRepository(self._session)
 
     def create_create_post_use_case(self) -> CreatePostUseCase:
-        return CreatePostUseCase(self._posts(), self._user_gateway, self._uow)
+        return CreatePostUseCase(self._post_repository, self._user_gateway, self._uow)
 
     def create_get_post_use_case(self) -> GetPostUseCase:
-        return GetPostUseCase(self._posts())
+        return GetPostUseCase(self._post_repository)
 
     def create_get_posts_by_user_use_case(self) -> GetPostsByUserUseCase:
-        return GetPostsByUserUseCase(self._posts())
+        return GetPostsByUserUseCase(self._post_repository)
 
     def create_delete_post_use_case(self) -> DeletePostUseCase:
-        return DeletePostUseCase(self._posts(), self._uow)
+        return DeletePostUseCase(self._post_repository, self._uow)
 
     def create_delete_user_posts_use_case(self) -> DeleteUserPostsUseCase:
-        return DeleteUserPostsUseCase(self._posts(), self._uow)
+        return DeleteUserPostsUseCase(self._post_repository, self._uow)

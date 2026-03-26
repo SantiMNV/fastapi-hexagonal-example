@@ -69,9 +69,7 @@ async def get_user_with_posts(
     ctx: RequestContext = Depends(get_request_context),
 ) -> UserWithPostsResponse:
     try:
-        user, posts = await ctx.factory.users.create_get_user_with_posts_use_case().execute(
-            user_id
-        )
+        user, posts = await ctx.factory.users.create_get_user_with_posts_use_case().execute(user_id)
         return UserWithPostsResponse(
             user=UserResponse.model_validate(user),
             posts=[PostResponse.model_validate(p) for p in posts],

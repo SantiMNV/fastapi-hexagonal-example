@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     # In production, pair with private network / ingress policies (not public internet).
     internal_api_key: str | None = None
     internal_api_header_name: str = "X-Internal-Token"
+    # Min account age before posting, hours (0 = off; e.g. 24 in production).
+    min_account_age_before_posting_hours: int = 0
 
     @field_validator("users_service_url", "posts_service_url", mode="before")
     @classmethod

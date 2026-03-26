@@ -1,9 +1,10 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from src.posts.application.use_cases.create_post import CreatePostUseCase
-from src.posts.domain.exceptions import PostAuthorNotFoundException
+from src.posts.domain.eligibility import PostAuthorEligibilityReason
+from src.posts.domain.exceptions import PostAuthorNotEligibleException
 from src.posts.domain.user_snapshot import UserSnapshot
 from tests.posts.doubles import InMemoryPostRepository, InMemoryUserGateway, NoOpUnitOfWork
 
@@ -30,5 +31,23 @@ class TestCreatePostUseCase:
         posts = InMemoryPostRepository()
         use_case = CreatePostUseCase(posts, InMemoryUserGateway(), NoOpUnitOfWork())
 
-        with pytest.raises(PostAuthorNotFoundException):
+        with pytest.raises(PostAuthorNotEligibleException) as exc_info:
             await use_case.execute(user_id="missing", title="Hi", content="Body")
+
+        assert exc_info.value.eligibility_reason == PostAuthorEligibilityReason.NOT_FOUND
+
+    async def test_rejects_author_not_eligible_yet(self) -> None:
+        posts = InMemoryPostRepository()
+        users = InMemoryUserGateway(min_account_age=timedelta(hours=24))
+        users.snapshots["some-user"] = UserSnapshot(
+            id="some-user",
+            name="Author",
+            email="a@example.com",
+            created_at=datetime.now(UTC),
+        )
+        use_case = CreatePostUseCase(posts, users, NoOpUnitOfWork())
+
+        with pytest.raises(PostAuthorNotEligibleException) as exc_info:
+            await use_case.execute(user_id="some-user", title="Hi", content="Body")
+
+        assert exc_info.value.eligibility_reason == PostAuthorEligibilityReason.TOO_EARLY

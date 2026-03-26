@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from src.shared.infrastructure.http import RequestContext, get_request_context
 from src.shared.infrastructure.http.internal_auth import verify_internal_api_key
-from src.users.domain.exceptions import UserNotFoundException
+from src.users.domain.exceptions import (
+    UserCannotCreatePostsYetException,
+    UserNotFoundException,
+)
 from src.users.infrastructure.http.responses import UserResponse
 
 router = APIRouter(
@@ -22,3 +25,20 @@ async def get_user(
         return UserResponse.model_validate(user)
     except UserNotFoundException as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
+
+
+@router.get(
+    "/{user_id}/posting-eligibility",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def posting_eligibility(
+    user_id: str,
+    ctx: RequestContext = Depends(get_request_context),
+) -> Response:
+    try:
+        await ctx.factory.users.create_verify_user_can_create_post_use_case().execute(user_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except UserNotFoundException as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message) from exc
+    except UserCannotCreatePostsYetException as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc.message) from exc

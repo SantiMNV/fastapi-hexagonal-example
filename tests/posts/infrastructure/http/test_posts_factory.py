@@ -6,7 +6,7 @@ from src.posts.application.use_cases import (
     GetPostsByUserUseCase,
     GetPostUseCase,
 )
-from src.posts.infrastructure.http.factory import PostFactory
+from src.posts.infrastructure.factory import PostFactory
 from tests.posts.doubles import InMemoryUserGateway
 
 

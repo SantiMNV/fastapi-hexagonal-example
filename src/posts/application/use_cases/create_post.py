@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from src.posts.application.ports.post_repository import IPostRepository
 from src.posts.application.ports.user_gateway import IUserGateway
-from src.posts.domain.exceptions import PostAuthorNotFoundException
+from src.posts.domain.exceptions import PostAuthorNotEligibleException
 from src.posts.domain.post import Post
 from src.shared.application.ports.unit_of_work import UnitOfWork
 
@@ -22,8 +22,9 @@ class CreatePostUseCase:
         self._uow = uow
 
     async def execute(self, user_id: str, title: str, content: str) -> Post:
-        if await self._user_gateway.get_by_id(user_id) is None:
-            raise PostAuthorNotFoundException(user_id)
+        eligibility = await self._user_gateway.get_post_author_eligibility(user_id)
+        if not eligibility.allowed:
+            raise PostAuthorNotEligibleException(user_id, reason=eligibility.reason)
 
         post = Post(
             id=str(uuid4()),

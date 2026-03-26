@@ -84,6 +84,11 @@ Typical pre-commit: `uv run ruff check . --fix`, `uv run ruff format .`, `uv run
 | `GET`    | `/posts/{post_id}`            | Get post by id         |
 | `DELETE` | `/posts/{post_id}`            | Delete post            |
 
+## Rules
+> A gateway only calls a use_case, the local gateway calls it directly, the http gateway calls an endpoint that calls the use_case. If should use local or http gateway is decided by settings.
+
+> A use_case can call other gateways and its own repository
+
 ## Concepts
 
 ### Hexagonal architecture (ports and adapters)

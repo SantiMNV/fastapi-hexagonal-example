@@ -3,6 +3,7 @@ from datetime import datetime
 import httpx
 
 from src.posts.application.ports.user_gateway import IUserGateway
+from src.posts.domain.eligibility import PostAuthorEligibility, PostAuthorEligibilityReason
 from src.posts.domain.user_snapshot import UserSnapshot
 
 
@@ -22,6 +23,19 @@ class HttpUserGateway(IUserGateway):
         if self._internal_api_key:
             return {self._internal_api_header_name: self._internal_api_key}
         return {}
+
+    async def get_post_author_eligibility(self, user_id: str) -> PostAuthorEligibility:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self._base_url}/internal/users/{user_id}/posting-eligibility",
+                headers=self._headers(),
+            )
+        if response.status_code == 404:
+            return PostAuthorEligibility(allowed=False, reason=PostAuthorEligibilityReason.NOT_FOUND)
+        if response.status_code == 403:
+            return PostAuthorEligibility(allowed=False, reason=PostAuthorEligibilityReason.TOO_EARLY)
+        response.raise_for_status()
+        return PostAuthorEligibility(allowed=True)
 
     async def get_by_id(self, user_id: str) -> UserSnapshot | None:
         async with httpx.AsyncClient() as client:
